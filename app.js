@@ -5,15 +5,12 @@ const mongoose = require('mongoose');
 const encrypt = require('mongoose-encryption');
 
 const app = express();
-const app = express();
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
-app.use(express.static('public'));
-app.set('view engine', 'ejs');
+
 app.use(express.urlencoded({
     extended: true
-}));
 }));
 
 app.listen(3000, () => {
@@ -34,15 +31,11 @@ const User = mongoose.model('User', userSchema);
 app.get('/', (req, res) => {
     res.render('home');
 });
-    res.render('home');
-});
 
 app.get('/login', (req, res) => {
     res.render('login');
 });
-    res.render('login');
-});
-
+ 
 app.get('/register', (req, res) => {
     res.render('register');
 });
