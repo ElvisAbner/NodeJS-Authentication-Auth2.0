@@ -53,7 +53,7 @@ app.get('/register', (req, res) => {
 
 app.get('/secrets', (req, res) => {
     if (req.isAuthenticated()) {
-        res.render('/secrets');
+        res.render('secrets');
     } else {
         res.render('login');
     }
@@ -71,7 +71,7 @@ app.post('/login', (req, res) => {
             console.log(err);
         } else {
             passport.authenticate('local')(req, res, function(){
-                res.redirect('/secrets')
+                res.redirect('secrets')
             })
         }
     })
@@ -83,10 +83,10 @@ app.post('/register', (req, res) => {
     User.register({username: req.body.username}, req.body.password, function(err, user){
         if (err) {
             console.log(err)
-            res.redirect('/register');  
+            res.redirect('register');  
         } else {
             passport.authenticate('local')(req, res, function(){
-                res.redirect('/secrets')
+                res.redirect('secrets')
             })
         }
     })
