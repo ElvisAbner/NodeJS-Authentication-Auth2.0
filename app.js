@@ -2,16 +2,24 @@ require('dotenv').config();
 const express = require('express');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const md5 = require('md5')
+const session = require('express-session');
+const passport = require('passport');
+const passportLocalMongoose = require('passport-local-mongoose');
 
 const app = express();
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
-
 app.use(express.urlencoded({
     extended: true
 }));
+app.use(session({
+    secret: 'Our little secret.',
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.listen(3000, () => {
     console.log('Server Running on Port 3000');
@@ -24,8 +32,13 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
+userSchema.plugin(passportLocalMongoose);
+
 const User = mongoose.model('User', userSchema);
 
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+ 
 app.get('/', (req, res) => {
     res.render('home');
 });
@@ -38,63 +51,45 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 
-app.post('/register', (req, res) => {
-    const newUser = new User({
-        email: req.body.username,
-        password: md5(req.body.password)
-    });
-
-    newUser.save()
-        .then(() => {
-            res.render('secrets');
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-});
+app.get('/secrets', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.render('/secrets');
+    } else {
+        res.render('login');
+    }
+})
 
 app.post('/login', (req, res) => {
-    const username = req.body.username;
-    const password = md5(req.body.password);
 
-    User.findOne({email: username}).then((foundUser) => {
-        if (foundUser) {
-            if (foundUser.password === password) {
-                res.render('secrets');
-            }
-        }
-    }).catch((err) => {
-        console.log(err)
-    })
-    res.render('register');
-});
-
-app.post('/register', (req, res) => {
-    const newUser = new User({
-        email: req.body.username,
+    const user = new User ({
+        username: req.body.username,
         password: req.body.password
     });
 
-    newUser.save()
-        .then(() => {
-            res.render('secrets');
-        })
-        .catch((err) => {
+    req.login(user, function(err){
+        if (err) {
             console.log(err);
-        });
+        } else {
+            passport.authenticate('local')(req, res, function(){
+                res.redirect('/secrets')
+            })
+        }
+    })
+
 });
 
-app.post('/login', (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+app.post('/register', (req, res) => {
 
-    User.findOne({email: username}).then((foundUser) => {
-        if (foundUser) {
-            if (foundUser.password === password) {
-                res.render('secrets');
-            }
+    User.register({username: req.body.username}, req.body.password, function(err, userDB){
+        if (err) {
+            console.log(err)
+            res.redirect('/register');  
+        } else {
+            passport.authenticate('local')(req, res, function(){
+                res.redirect('/secrets')
+            })
         }
-    }).catch((err) => {
-        console.log(err)
     })
-})
+
+});
+
