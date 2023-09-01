@@ -80,7 +80,7 @@ app.post('/login', (req, res) => {
 
 app.post('/register', (req, res) => {
 
-    User.register({username: req.body.username}, req.body.password, function(err, userDB){
+    User.register({username: req.body.username}, req.body.password, function(err, user){
         if (err) {
             console.log(err)
             res.redirect('/register');  
